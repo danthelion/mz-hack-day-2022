@@ -24,16 +24,16 @@ services:
      - --set redpanda.enable_idempotence=true
      - --set redpanda.auto_create_topics_enabled=true
     ports:
-     - 9092:9092
-     - 8081:8081
-     - 8082:8082
+      - "9092:9092"
+      - "8081:8081"
+      - "8082:8082"
     healthcheck: { test: curl -f localhost:9644/v1/status/ready, interval: 1s, start_period: 30s }
   materialized:
     image: materialize/materialized:v0.20.0
     container_name: materialized
     command: -w1
     ports:
-      - 6875:6875
+      - "6875:6875"
     volumes:
       - ./data/icao24_mapping_airbus.json.gz:/tmp/icao24_mapping_airbus.json.gz
   mzcli:
@@ -47,7 +47,7 @@ services:
         - build_for=${ARCH}
     container_name: dbt
     ports:
-      - 8000:8080
+      - "8000:8080"
     volumes:
       - ./dbt/profiles.yml:/root/.dbt/profiles.yml
       - ./dbt/:/usr/app/dbt
@@ -59,6 +59,26 @@ services:
     image: ${MIMG}/metabase
     container_name: metabase
     depends_on:
-       - materialized
+      - materialized
     ports:
-      - 3030:3000
+      - "3030:3000"
+  connect:
+    image: debezium/connect
+    depends_on:
+      - redpanda
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: "redpanda:9092"
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: "inventory.configs"
+      OFFSET_STORAGE_TOPIC: "inventory.offset"
+      STATUS_STORAGE_TOPIC: "inventory.status"
+  mysql:
+    image: debezium/example-mysql:1.6
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: debezium
+      MYSQL_USER: mysqluser
+      MYSQL_PASSWORD: mysqlpw
