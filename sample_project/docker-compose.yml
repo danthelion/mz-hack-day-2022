@@ -62,10 +62,11 @@ services:
       - materialized
     ports:
       - "3030:3000"
-  connect:
+  debezium:
     image: debezium/connect
     depends_on:
       - redpanda
+      - mysql
     ports:
       - "8083:8083"
     environment:
@@ -74,6 +75,10 @@ services:
       CONFIG_STORAGE_TOPIC: "inventory.configs"
       OFFSET_STORAGE_TOPIC: "inventory.offset"
       STATUS_STORAGE_TOPIC: "inventory.status"
+      KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://redpanda:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://redpanda:8081
   mysql:
     image: debezium/example-mysql:1.6
     ports:
