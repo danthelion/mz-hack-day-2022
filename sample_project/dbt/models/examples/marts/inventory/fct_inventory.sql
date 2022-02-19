@@ -1,2 +1,7 @@
-CREATE MATERIALIZED VIEW inventory_customers_view AS
-SELECT * FROM inventory_customers;
+{{ config(
+    materialized ='materializedview'
+) }}
+
+
+select *
+from {{ ref('stg_inventory_customers') }}
